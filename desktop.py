@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Native macOS shell for Meeting Commitments."""
+"""Native macOS shell for Meeting Actions."""
 from __future__ import annotations
 
 import threading
@@ -21,12 +21,12 @@ def run() -> None:
         if window is not None:
             window.destroy()
 
-    menu = [Menu("File", [MenuAction("Quit Meeting Commitments", quit_app)])]
+    menu = [Menu("File", [MenuAction("Quit Meeting Actions", quit_app)])]
     try:
         worker.start()
         started = True
         install_policy(origin)
-        window = webview.create_window("Meeting Commitments", origin + "/?desktop=1", width=1120, height=760, min_size=(760, 560), menu=menu)
+        window = webview.create_window("Meeting Actions", origin + "/?desktop=1", width=1120, height=760, min_size=(760, 560), menu=menu)
         webview.start()
     finally:
         if started:
@@ -43,8 +43,8 @@ if __name__ == "__main__":
         import AppKit
 
         alert = AppKit.NSAlert.alloc().init()
-        alert.setMessageText_("Meeting Commitments could not start")
-        alert.setInformativeText_("The local app failed to open. Restart Meeting Commitments and try again.")
+        alert.setMessageText_("Meeting Actions could not start")
+        alert.setInformativeText_("The local app failed to open. Restart Meeting Actions and try again.")
         alert.addButtonWithTitle_("OK")
         alert.runModal()
         raise SystemExit(1)

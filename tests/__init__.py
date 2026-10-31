@@ -1,1 +1,1 @@
-"""Acceptance checks for Meeting Commitments."""
+"""Acceptance checks for Meeting Actions."""

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install only an owned Meeting Commitments bundle without deleting prior copies."""
+"""Install only an owned Meeting Actions bundle without deleting prior copies."""
 from __future__ import annotations
 
 import plistlib
