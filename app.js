@@ -91,7 +91,7 @@ $('#saveEdit').onclick = async (event) => {
   catch (error) { flash(error.message); }
 };
 $('#exportBtn').onclick = async () => {
-  try { const data = await api(`/api/meetings/${encodeURIComponent(meeting.id)}/export`); const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const anchor = document.createElement('a'); anchor.href = URL.createObjectURL(blob); anchor.download = 'confirmed-commitments.json'; anchor.click(); URL.revokeObjectURL(anchor.href); flash('Confirmed commitments exported.'); }
+  try { const data = await api(`/api/meetings/${encodeURIComponent(meeting.id)}/export`); const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const anchor = document.createElement('a'); anchor.href = URL.createObjectURL(blob); anchor.download = 'confirmed-meeting-actions.json'; anchor.click(); URL.revokeObjectURL(anchor.href); flash('Confirmed commitments exported.'); }
   catch (error) { flash(error.message); }
 };
 function settings(on) { $('#room').hidden = on; $('#settings').hidden = !on; $('#settingsTab').classList.toggle('active', on); $('#libraryTab').classList.toggle('active', !on); }

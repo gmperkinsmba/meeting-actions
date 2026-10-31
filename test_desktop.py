@@ -22,7 +22,7 @@ class DesktopTests(unittest.TestCase):
             page = conn.getresponse()
             body = page.read().decode()
             self.assertEqual(page.status, 200)
-            self.assertIn("Meeting Commitments", body)
+            self.assertIn("Meeting Actions", body)
             self.assertIn("/desktop.css", body)
             conn.request("GET", "/desktop.css")
             self.assertEqual(conn.getresponse().status, 200)

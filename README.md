@@ -1,6 +1,6 @@
-# Meeting Commitments
+# Meeting Actions
 
-Turn a meeting transcript into a short list of proposed actions and decisions. Each proposal shows its original speaker and timestamp. It keeps the source words beside it. Review the owner and due date before you confirm or export a proposal.
+Review tasks found in meeting transcripts with their source lines.
 
 This is a local review tool. It does not send tasks, invitations, or messages. Extraction uses simple, documented text rules. It is not an AI transcript reader. It may miss a commitment or suggest a line that is not one. Check every proposal against its source.
 
@@ -15,7 +15,7 @@ python3.12 -m venv .desktop-venv
 .desktop-venv/bin/python install_desktop.py
 ```
 
-Then open `~/Applications/Meeting Commitments.app` in Finder. Use File → Quit Meeting Commitments or close the window to stop the local listener. To remove only the marked app copy, run `.desktop-venv/bin/python uninstall_desktop.py`. Stored meeting data remains in `~/.local/share/meeting-commitments` until removed in Settings.
+Then open `~/Applications/Meeting Actions.app` in Finder. Use File → Quit Meeting Actions or close the window to stop the local listener. To remove only the marked app copy, run `.desktop-venv/bin/python uninstall_desktop.py`. Stored meeting data remains in `~/.local/share/meeting-commitments` until removed in Settings.
 
 ## Browser development
 
@@ -58,3 +58,5 @@ Tests check source references and unresolved proposals. They also check confirma
 MIT. See [LICENSE](LICENSE).
 
 For browser development, use the command and local address above. The native app targets macOS; other operating systems have not been tested.
+
+The app is now named Meeting Actions. Existing local data remains in `~/.local/share/meeting-commitments`.

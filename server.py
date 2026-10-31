@@ -73,10 +73,10 @@ def seed():
         db.execute("INSERT INTO items VALUES (?,?,?,?,?,?,?,?,?)",(secrets.token_hex(8),mid,p["kind"],p["text"],p["owner"],p["due"],json.dumps(p["evidence"]),p["status"],p["reason"]))
     db.commit(); db.close()
 
-HTML = r'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#090b0f"><title>Meeting Commitments</title><link rel="stylesheet" href="/style.css"></head><body>
-<header><a class="brand" href="/" aria-label="Meeting Commitments home"><span class="mark">M</span><span>Meeting<br>Commitments</span></a><nav><button id="libraryTab" class="nav active">Review room</button><button id="settingsTab" class="nav">Settings</button></nav><span class="local"><i></i> Saved on this device</span></header>
+HTML = r'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#090b0f"><title>Meeting Actions</title><link rel="stylesheet" href="/style.css"></head><body>
+<header><a class="brand" href="/" aria-label="Meeting Actions home"><span class="mark">M</span><span>Meeting<br>Actions</span></a><nav><button id="libraryTab" class="nav active">Review room</button><button id="settingsTab" class="nav">Settings</button></nav><span class="local"><i></i> Saved on this device</span></header>
 <main id="app"><section id="room">
-<div class="topline"><div><p class="eyebrow">THE REVIEW ROOM</p><h1>Keep the receipts.</h1><p class="intro">Turn meeting words into commitments you can stand behind.</p></div><button id="importBtn" class="primary">Import transcript <span>+</span></button></div>
+<div class="topline"><div><p class="eyebrow">THE REVIEW ROOM</p><h1>Meeting Actions</h1><p class="intro">Review tasks found in meeting transcripts with their source lines.</p></div><button id="importBtn" class="primary">Import transcript <span>+</span></button></div>
 <section class="workbench"><div class="transcript-pane"><div class="pane-head"><div><span class="label">TRANSCRIPT</span><h2 id="meetingTitle">Loading meeting…</h2></div><span class="synthetic">SAMPLE MEETING</span></div><div id="transcript" class="transcript"></div><div class="transcript-foot"><span>Each proposal points to its source line.</span><button id="editTranscript" class="text-button">Edit transcript</button></div></div>
 <div class="commit-pane"><div class="pane-head"><div><span class="label">COMMITMENTS</span><h2>Review each one</h2></div><span id="count" class="count">0 items</span></div><div id="items" class="items"></div><div class="export-row"><span id="exportHint">Only confirmed items are included.</span><button id="exportBtn" class="export">Export confirmed</button></div></div></section>
 <div class="bottom-note"><span class="pulse"></span> Nothing leaves this device. Confirmed items only.</div></section>
@@ -98,7 +98,7 @@ $('#items').addEventListener('click',async e=>{const ev=e.target.closest('.evide
 async function patchItem(it,changes){await api(`/api/items/${encodeURIComponent(it.id)}`,'PATCH',changes);await load()}async function saveItem(it,status){await patchItem(it,{owner:$(`#owner-${CSS.escape(it.id)}`).value.trim(),due:$(`#due-${CSS.escape(it.id)}`).value.trim(),status,resolved:true})}
 $('#importBtn').onclick=()=>$('#importDialog').showModal();$('#saveMeeting').onclick=async e=>{e.preventDefault();const title=$('#titleInput').value.trim(),transcript=$('#transcriptInput').value;if(!title||!transcript.trim()){flash('Add a meeting name and transcript.');return}try{await api('/api/meetings','POST',{title,transcript});$('#importDialog').close();$('#transcriptInput').value='';await load();flash('Transcript imported. Review each proposal.')}catch(err){flash(err.message)}};
 $('#editTranscript').onclick=()=>{$('#editText').value=meeting?.transcript||'';$('#editDialog').showModal()};$('#saveEdit').onclick=async e=>{e.preventDefault();try{await api(`/api/meetings/${encodeURIComponent(meeting.id)}`,'PUT',{transcript:$('#editText').value});$('#editDialog').close();await load();flash('Transcript updated. Proposals reset for review.')}catch(err){flash(err.message)}};
-$('#exportBtn').onclick=async()=>{const data=await api(`/api/meetings/${encodeURIComponent(meeting.id)}/export`);const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='confirmed-commitments.json';a.click();URL.revokeObjectURL(a.href);flash('Confirmed commitments exported.')};
+$('#exportBtn').onclick=async()=>{const data=await api(`/api/meetings/${encodeURIComponent(meeting.id)}/export`);const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='confirmed-meeting-actions.json';a.click();URL.revokeObjectURL(a.href);flash('Confirmed commitments exported.')};
 function settings(on){$('#room').hidden=on;$('#settings').hidden=!on;$('#settingsTab').classList.toggle('active',on);$('#libraryTab').classList.toggle('active',!on)}$('#settingsTab').onclick=()=>settings(true);$('#libraryTab').onclick=()=>settings(false);$('#backBtn').onclick=()=>settings(false);$('#wipeBtn').onclick=async()=>{if(!confirm('Delete all meeting transcripts and commitment reviews from this app?'))return;await api('/api/data','DELETE');await load();settings(false);flash('Local app data deleted.')};load().catch(e=>flash('Could not load local data: '+e.message));'''
 
 JS = (ROOT / "app.js").read_text(encoding="utf-8")
@@ -125,7 +125,7 @@ class Handler(BaseHTTPRequestHandler):
         if not self.safe():return self.send(403,b'Forbidden','text/plain')
         path=urlparse(self.path).path
         if path=='/':
-            page=HTML.replace('Keep the receipts.','Meeting Commitments').replace('Turn meeting words into commitments you can stand behind.','Review actions and decisions against the words in each meeting transcript.').replace('<h2 id="meetingTitle">Loading meeting…</h2>','<h2 id="meetingTitle">Loading meeting…</h2><select id="meetingSelect" aria-label="Choose a meeting"></select>').replace('SAMPLE MEETING','LOCAL TRANSCRIPT')
+            page=HTML.replace('<h2 id="meetingTitle">Loading meeting…</h2>','<h2 id="meetingTitle">Loading meeting…</h2><select id="meetingSelect" aria-label="Choose a meeting"></select>').replace('SAMPLE MEETING','LOCAL TRANSCRIPT')
             if 'desktop=1' in self.path:page=page.replace('</head>','<link rel="stylesheet" href="/desktop.css"></head>')
             return self.send(200,page.encode(),'text/html; charset=utf-8')
         if path=='/desktop.css':return self.send(200,(ROOT/'desktop.css').read_bytes(),'text/css; charset=utf-8')
@@ -204,7 +204,7 @@ def make_server(port=0):
 
 def run(port=8344):
     seed();server=make_server(port=port)
-    print(f'Meeting Commitments listening at http://127.0.0.1:{server.server_port}',flush=True);server.serve_forever()
+    print(f'Meeting Actions listening at http://127.0.0.1:{server.server_port}',flush=True);server.serve_forever()
 if __name__=='__main__':
     import argparse
     p=argparse.ArgumentParser();p.add_argument('--port',type=int,default=8344);a=p.parse_args();run(a.port)
