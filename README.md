@@ -4,7 +4,20 @@ Turn a meeting transcript into a short list of proposed actions and decisions. E
 
 This is a local review tool. It does not send tasks, invitations, or messages. Extraction uses simple, documented text rules. It is not an AI transcript reader. It may miss a commitment or suggest a line that is not one. Check every proposal against its source.
 
-## Run
+**Install and run on macOS**
+
+The native app opens as a local Mac window. No browser tab or manual server start is needed. In this source folder, build and install it with:
+
+```sh
+python3.12 -m venv .desktop-venv
+.desktop-venv/bin/python -m pip install -r requirements-desktop.lock.txt
+.desktop-venv/bin/python build_desktop.py
+.desktop-venv/bin/python install_desktop.py
+```
+
+Then open `~/Applications/Meeting Commitments.app` in Finder. Use File → Quit Meeting Commitments or close the window to stop the local listener. To remove only the marked app copy, run `.desktop-venv/bin/python uninstall_desktop.py`. Stored meeting data remains in `~/.local/share/meeting-commitments` until removed in Settings.
+
+## Browser development
 
 Requires Python 3.10 or later. No packages need to be installed.
 
@@ -43,3 +56,5 @@ Tests check source references and unresolved proposals. They also check confirma
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+For browser development, use the command and local address above. The native app targets macOS; other operating systems have not been tested.

@@ -7,6 +7,7 @@ import secrets
 import sqlite3
 from datetime import date
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from desktop_server import make_server as _make_desktop_server
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -104,6 +105,9 @@ JS = (ROOT / "app.js").read_text(encoding="utf-8")
 
 class Handler(BaseHTTPRequestHandler):
     server_version="MeetingCommitments/1.0"
+    def setup(self):
+        super().setup()
+        self.connection.settimeout(10)
     def log_message(self,fmt,*args):
         # No request bodies or transcript content in logs.
         super().log_message(fmt,*args)
@@ -122,7 +126,9 @@ class Handler(BaseHTTPRequestHandler):
         path=urlparse(self.path).path
         if path=='/':
             page=HTML.replace('Keep the receipts.','Meeting Commitments').replace('Turn meeting words into commitments you can stand behind.','Review actions and decisions against the words in each meeting transcript.').replace('<h2 id="meetingTitle">Loading meeting…</h2>','<h2 id="meetingTitle">Loading meeting…</h2><select id="meetingSelect" aria-label="Choose a meeting"></select>').replace('SAMPLE MEETING','LOCAL TRANSCRIPT')
+            if 'desktop=1' in self.path:page=page.replace('</head>','<link rel="stylesheet" href="/desktop.css"></head>')
             return self.send(200,page.encode(),'text/html; charset=utf-8')
+        if path=='/desktop.css':return self.send(200,(ROOT/'desktop.css').read_bytes(),'text/css; charset=utf-8')
         if path=='/style.css':return self.send(200,CSS.replace(':root{', '#meetingSelect{display:block;max-width:260px;margin-top:8px;background:#0b0f13;color:#e8eee9;border:1px solid #39463f;border-radius:7px;padding:5px 8px;font-size:12px}:root{',1).encode(),'text/css; charset=utf-8')
         if path=='/app.js':return self.send(200,JS.replace('TOKEN_PLACEHOLDER',json.dumps(TOKEN)).encode(),'application/javascript; charset=utf-8')
         if path=='/api/state':
@@ -193,9 +199,12 @@ class Handler(BaseHTTPRequestHandler):
         if path=='/api/data':db.execute('DELETE FROM items');db.execute('DELETE FROM meetings');db.commit();db.close();return self.send(204)
         db.close();return self.send(404)
 
+def make_server(port=0):
+    return _make_desktop_server(Handler, port=port)
+
 def run(port=8344):
-    seed();server=ThreadingHTTPServer(('127.0.0.1',port),Handler);server.daemon_threads=True
-    print(f'Meeting Commitments listening at http://127.0.0.1:{port}',flush=True);server.serve_forever()
+    seed();server=make_server(port=port)
+    print(f'Meeting Commitments listening at http://127.0.0.1:{server.server_port}',flush=True);server.serve_forever()
 if __name__=='__main__':
     import argparse
     p=argparse.ArgumentParser();p.add_argument('--port',type=int,default=8344);a=p.parse_args();run(a.port)

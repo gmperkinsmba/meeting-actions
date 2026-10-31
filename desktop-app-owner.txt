@@ -1,0 +1,3 @@
+Meeting Commitments desktop bundle
+io.github.gmperkinsmba.meeting-commitments
+local-build-owner-marker-v1
