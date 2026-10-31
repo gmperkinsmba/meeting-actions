@@ -10,25 +10,28 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from desktop_server import make_server as _make_desktop_server
 from pathlib import Path
 from urllib.parse import urlparse
+from runtime_security import ensure_private_directory, prepare_database, verify_database
 
 ROOT = Path(__file__).resolve().parent
 DATA = Path(os.environ.get("MEETING_COMMITMENTS_DATA", Path.home() / ".local/share/meeting-commitments"))
-DATA.mkdir(mode=0o700, parents=True, exist_ok=True)
-try:
-    DATA.chmod(0o700)
-except OSError:
-    pass
+ensure_private_directory(DATA)
 DB = DATA / "commitments.sqlite3"
 TOKEN = secrets.token_urlsafe(24)
 MAX_BODY = 500_000
 
 def connect():
+    prepare_database(DB)
     db = sqlite3.connect(DB)
-    db.row_factory = sqlite3.Row
-    db.execute("PRAGMA journal_mode=WAL")
-    db.execute("CREATE TABLE IF NOT EXISTS meetings (id TEXT PRIMARY KEY, title TEXT NOT NULL, transcript TEXT NOT NULL, created TEXT NOT NULL)")
-    db.execute("CREATE TABLE IF NOT EXISTS items (id TEXT PRIMARY KEY, meeting_id TEXT NOT NULL, kind TEXT NOT NULL, text TEXT NOT NULL, owner TEXT NOT NULL DEFAULT '', due TEXT NOT NULL DEFAULT '', evidence TEXT NOT NULL, status TEXT NOT NULL, reason TEXT NOT NULL DEFAULT '')")
-    return db
+    try:
+        db.row_factory = sqlite3.Row
+        db.execute("PRAGMA journal_mode=WAL")
+        verify_database(DB)
+        db.execute("CREATE TABLE IF NOT EXISTS meetings (id TEXT PRIMARY KEY, title TEXT NOT NULL, transcript TEXT NOT NULL, created TEXT NOT NULL)")
+        db.execute("CREATE TABLE IF NOT EXISTS items (id TEXT PRIMARY KEY, meeting_id TEXT NOT NULL, kind TEXT NOT NULL, text TEXT NOT NULL, owner TEXT NOT NULL DEFAULT '', due TEXT NOT NULL DEFAULT '', evidence TEXT NOT NULL, status TEXT NOT NULL, reason TEXT NOT NULL DEFAULT '')")
+        return db
+    except BaseException:
+        db.close()
+        raise
 
 def parse_transcript(text):
     """Parse [HH:MM:SS] Speaker: words rows, retaining exact source text."""

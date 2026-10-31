@@ -4,6 +4,7 @@ import os
 import tempfile
 import threading
 import unittest
+from unittest.mock import Mock, patch
 from http.client import HTTPConnection
 from pathlib import Path
 
@@ -95,6 +96,14 @@ class AppTests(unittest.TestCase):
         self.assertIn("'&#39;'",app.JS)
         self.assertNotIn('fonts.googleapis.com',app.CSS)
         self.assertIn("default-src 'self'",__import__('inspect').getsource(app.Handler.send))
+
+    def test_database_connection_closes_when_setup_fails(self):
+        connection=Mock()
+        connection.execute.side_effect=RuntimeError('injected setup failure')
+        with patch.object(app,'prepare_database'), patch.object(app.sqlite3,'connect',return_value=connection):
+            with self.assertRaisesRegex(RuntimeError,'injected setup failure'):
+                app.connect()
+        connection.close.assert_called_once_with()
 
 if __name__=='__main__':
     unittest.main()
